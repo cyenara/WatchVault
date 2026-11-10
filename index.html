@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WatchVault</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+
+    <header>
+        <h1>WatchVault</h1>
+        <nav aria-label="Main navigation">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="#discover">Discover</a></li>
+            </ul>
+        </nav>
+
+    </header>
+    <main>
+    <section id="discover">
+        <h2>Discover Movies</h2>
+        <p>Explore your next favorite movie.</p>
+        <div class="search-container">
+            <label for="movie-search">Search movies</label>
+
+            <input
+                type="search"
+                id="movie-search"
+                placeholder="Enter movie title..."
+            >
+        </div>
+        <div class="filters-container">
+            <div class="genre-filter">
+                <label for="genre-search">Genre</label>
+                <select id="genre-search">
+                    <option value="All-genres">All Genres</option>
+                    <option value="Sci-Fi">Sci-Fi</option>
+                    <option value="Action">Action</option>
+                </select>
+            </div>
+            <div class="sort-filter">
+                <label for="sort-search">Sort</label>
+                <select id="sort-search">
+                    <option value="newest">Newest first</option>
+                    <option value="oldest">Oldest first</option>
+                    <option value="az">Title A-Z</option>
+                </select>
+            </div>
+        </div>
+        <div class="movie-grid" id="movie-grid"></div>
+    </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 WatchVault</p>
+    </footer>
+
+</body>
+</html>
