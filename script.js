@@ -28,9 +28,19 @@ function renderMovies(movieList) {
         const title = document.createElement("h3");
         title.textContent = movie.title;
 
-        const info = document.createElement("p");
-        info.textContent = movie.year + " | " + movie.genre;
+        const genreNames = movie.genreIds.map(function(id) {
+            return genreNamesById[id];
+        });
 
+        const knownGenres = genreNames.filter(function(name) {
+            return name !== undefined;
+        });
+
+        const genreText = knownGenres.join(", ");
+
+        const info = document.createElement("p");
+
+        info.textContent = `${movie.year ?? "N/A"} | ⭐ ${movie.rating.toFixed(1)} | ${genreText}`;
         card.append(poster, title, info);
 
         movieGrid.appendChild(card);
@@ -59,7 +69,8 @@ function applyFilters() {
 
         const matchesSearch = movie.title.toLowerCase().includes(searchText);
 
-        const matchesGenre = selectedGenre === "All-genres" || movie.genre === selectedGenre;
+        const matchesGenre = selectedGenre === "All-genres"
+            || movie.genreIds.includes(Number(selectedGenre));
 
         return matchesSearch && matchesGenre;
     });
@@ -101,4 +112,62 @@ async function loadMovies() {
     }
 }
 
-loadMovies();
+//loadMovies();
+const genreNamesById = {
+    28: "Action",
+    12: "Adventure",
+    16: "Animation",
+    35: "Comedy",
+    80: "Crime",
+    99: "Documentary",
+    18: "Drama",
+    10751: "Family",
+    14: "Fantasy",
+    36: "History",
+    27: "Horror",
+    10402: "Music",
+    9648: "Mystery",
+    10749: "Romance",
+    878: "Sci-Fi",
+    10770: "TV Movie",
+    53: "Thriller",
+    10752: "War",
+    37: "Western"
+};
+
+async function testTMDB() {
+    try {
+        const response = await fetch("http://localhost:3001/api/movies/popular");
+
+        if (!response.ok) {
+            throw new Error("Failed to connect to backend");
+        }
+
+        const data = await response.json();
+
+        const formattedMovies = data.results.map(function(movie) {
+            return {
+                title: movie.title,
+                year: movie.release_date
+                    ? Number(movie.release_date.slice(0, 4))
+                    : null,
+                rating: movie.vote_average,
+                poster: movie.poster_path
+                    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                    : "images/placeholder.jpg",
+                genreIds: movie.genre_ids
+
+            };
+        });
+
+        movies = formattedMovies;
+        applyFilters();
+
+    console.log(formattedMovies);
+
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+testTMDB();
