@@ -1,9 +1,11 @@
 let movies = [];
+let currentPage = 1;
 
 const movieGrid = document.getElementById("movie-grid");
 const searchInput = document.getElementById("movie-search");
 const genreFilter = document.getElementById("genre-search");
 const sortFilter = document.getElementById("sort-search");
+const loadMoreButton = document.getElementById("load-more");
 
 function renderMovies(movieList) {
 
@@ -46,8 +48,6 @@ function renderMovies(movieList) {
         movieGrid.appendChild(card);
     });
 }
-
-renderMovies(movies);
 
 searchInput.addEventListener("input", function() {
     applyFilters();
@@ -94,25 +94,6 @@ function applyFilters() {
     renderMovies(filteredMovies);
 }
 
-async function loadMovies() {
-    try {
-        const response = await fetch("movies.json");
-
-        if (!response.ok) {
-            throw new Error("Failed to load movies");
-        }
-
-        const data = await response.json();
-
-        movies = data;
-        applyFilters();
-
-    } catch (error) {
-        console.error(error);
-    }
-}
-
-//loadMovies();
 const genreNamesById = {
     28: "Action",
     12: "Adventure",
@@ -135,6 +116,23 @@ const genreNamesById = {
     37: "Western"
 };
 
+function formatMovies(movieList) {
+    return movieList.map(function(movie) {
+        return {
+            id: movie.id,
+            title: movie.title,
+            year: movie.release_date
+                ? Number(movie.release_date.slice(0, 4))
+                : null,
+            rating: movie.vote_average,
+            poster: movie.poster_path
+                ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                : "images/placeholder.jpg",
+            genreIds: movie.genre_ids
+        };
+    });
+}
+
 async function testTMDB() {
     try {
         const response = await fetch("http://localhost:3001/api/movies/popular");
@@ -145,21 +143,8 @@ async function testTMDB() {
 
         const data = await response.json();
 
-        const formattedMovies = data.results.map(function(movie) {
-            return {
-                title: movie.title,
-                year: movie.release_date
-                    ? Number(movie.release_date.slice(0, 4))
-                    : null,
-                rating: movie.vote_average,
-                poster: movie.poster_path
-                    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-                    : "images/placeholder.jpg",
-                genreIds: movie.genre_ids
-
-            };
-        });
-
+        const formattedMovies = formatMovies(data.results);
+        
         movies = formattedMovies;
         applyFilters();
 
@@ -171,3 +156,47 @@ async function testTMDB() {
 }
 
 testTMDB();
+
+loadMoreButton.addEventListener("click", async function() {
+    loadMoreButton.disabled = true;
+    loadMoreButton.textContent = "Loading...";
+    try {
+        const nextPage = currentPage + 1;
+
+        const response = await fetch(
+            `http://localhost:3001/api/movies/popular?page=${nextPage}`
+        );
+
+        if (!response.ok) {
+            throw new Error("Failed to load more movies");
+        }
+
+        const data = await response.json();
+
+        const newMovies = formatMovies(data.results);
+
+        const existingIds = new Set(movies.map(function(movie) {
+            return movie.id;
+        }));
+
+        const uniqueMovies = newMovies.filter(function(movie) {
+            if (existingIds.has(movie.id)) {
+                return false;
+            }
+
+            existingIds.add(movie.id);
+            return true;
+        });
+
+        movies = [...movies, ...uniqueMovies];
+        applyFilters();
+
+        currentPage = nextPage;
+
+    } catch (error) {
+        console.error(error);
+    } finally {
+        loadMoreButton.disabled = false;
+        loadMoreButton.textContent = "Load More";
+    }
+});

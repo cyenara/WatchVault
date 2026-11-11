@@ -27,6 +27,7 @@ app.get("/api/about", function(req, res) {
 
 app.get("/api/movies/popular", async function(req, res) {
     try {
+        const page = Number(req.query.page) || 1;
         const token = process.env.TMDB_READ_TOKEN;
 
         if (!token) {
@@ -36,7 +37,7 @@ app.get("/api/movies/popular", async function(req, res) {
         }
 
         const response = await fetch(
-            "https://api.themoviedb.org/3/movie/popular?language=en-US&page=1",
+            `https://api.themoviedb.org/3/movie/popular?language=en-US&page=${page}`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
