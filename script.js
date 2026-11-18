@@ -1,11 +1,14 @@
 let movies = [];
 let currentPage = 1;
+let totalPages = 1;
+
 
 const movieGrid = document.getElementById("movie-grid");
 const searchInput = document.getElementById("movie-search");
 const genreFilter = document.getElementById("genre-search");
 const sortFilter = document.getElementById("sort-search");
 const loadMoreButton = document.getElementById("load-more");
+loadMoreButton.hidden = true;
 
 function renderMovies(movieList) {
 
@@ -43,7 +46,14 @@ function renderMovies(movieList) {
         const info = document.createElement("p");
 
         info.textContent = `${movie.year ?? "N/A"} | ⭐ ${movie.rating.toFixed(1)} | ${genreText}`;
-        card.append(poster, title, info);
+        const detailsLink = document.createElement("a");
+
+        detailsLink.className = "movie-link";
+        detailsLink.href = `movie.html?id=${movie.id}`;
+
+        detailsLink.append(poster, title);
+
+        card.append(detailsLink, info);
 
         movieGrid.appendChild(card);
     });
@@ -146,7 +156,13 @@ async function testTMDB() {
         const formattedMovies = formatMovies(data.results);
         
         movies = formattedMovies;
+
+        currentPage = data.page;
+        totalPages = data.total_pages;
+
         applyFilters();
+
+        loadMoreButton.hidden = currentPage >= totalPages;
 
     console.log(formattedMovies);
 
@@ -158,8 +174,14 @@ async function testTMDB() {
 testTMDB();
 
 loadMoreButton.addEventListener("click", async function() {
+
+    if (loadMoreButton.disabled || currentPage >= totalPages) {
+        return;
+    }
+
     loadMoreButton.disabled = true;
     loadMoreButton.textContent = "Loading...";
+
     try {
         const nextPage = currentPage + 1;
 
@@ -189,9 +211,13 @@ loadMoreButton.addEventListener("click", async function() {
         });
 
         movies = [...movies, ...uniqueMovies];
+
+        currentPage = data.page;
+        totalPages = data.total_pages;
+
         applyFilters();
 
-        currentPage = nextPage;
+        loadMoreButton.hidden = currentPage >= totalPages;
 
     } catch (error) {
         console.error(error);

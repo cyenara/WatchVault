@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Movie Details | WatchVault</title>
+
+    <link rel="stylesheet" href="style.css">
+    <script src="movie.js" defer></script>
+</head>
+<body>
+
+    <header>
+        <h1>WatchVault</h1>
+        <nav aria-label="Main navigation">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#discover">Discover</a></li>
+                <li><a href="watchlist.html">Watchlist</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="movie-details-page">
+
+        <a class="back-link" href="index.html#discover">
+            ← Back to Discover
+        </a>
+        <div id="details-backdrop" class="details-backdrop" hidden></div>
+        <p id="details-status" role="status">Loading movie...</p>
+
+        <section id="movie-details" class="movie-details" hidden>
+
+            <img id="details-poster" class="details-poster" alt="">
+
+            <div class="details-content">
+
+                <h2 id="details-title"></h2>
+
+                <p id="details-meta"></p>
+
+                <p id="details-genres"></p>
+                <button id="watchlist-button" type="button" aria-pressed="false">
+                    + Add to Watchlist
+                </button>
+
+                <h3>Overview</h3>
+                <p id="details-overview"></p>
+
+                <h3>Director</h3>
+                <p id="details-director"></p>
+
+                <h3>Cast</h3>
+                <div id="details-cast" class="cast-grid"></div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2026 WatchVault</p>
+    </footer>
+
+</body>
+</html>

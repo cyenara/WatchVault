@@ -1,5 +1,6 @@
 const cors = require("cors");
 const express = require("express");
+const db = require("./db");
 
 const app = express();
 app.use(cors({
@@ -62,6 +63,52 @@ app.get("/api/movies/popular", async function(req, res) {
 
         res.status(502).json({
             message: "Failed to fetch movies"
+        });
+    }
+});
+
+app.get("/api/movies/:id", async function(req, res) {
+    try {
+        const movieId = Number(req.params.id);
+        const token = process.env.TMDB_READ_TOKEN;
+
+        if (!Number.isSafeInteger(movieId) || movieId <= 0) {
+            return res.status(400).json({
+                message: "Invalid movie ID"
+            });
+        }
+
+        if (!token) {
+            return res.status(500).json({
+                message: "TMDB token is missing"
+            });
+        }
+
+        const response = await fetch(
+            `https://api.themoviedb.org/3/movie/${movieId}?language=en-US&append_to_response=credits`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    accept: "application/json"
+                }
+            }
+        );
+
+        if (!response.ok) {
+            return res.status(response.status === 404 ? 404 : 502).json({
+                message: "Failed to load movie details"
+            });
+        }
+
+        const data = await response.json();
+
+        res.json(data);
+
+    } catch (error) {
+        console.error("Movie details error:", error.message);
+
+        res.status(502).json({
+            message: "Failed to fetch movie details"
         });
     }
 });
