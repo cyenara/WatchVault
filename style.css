@@ -472,3 +472,141 @@ nav ul {
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+
+/* =====================================
+   PROFILE PAGE
+===================================== */
+
+.profile-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    min-height: 75vh;
+    padding: 50px 24px;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+
+    padding: 30px;
+    margin-bottom: 35px;
+
+    background-color: #3c4a68;
+    border-radius: 12px;
+}
+
+.profile-avatar {
+    width: 90px;
+    height: 90px;
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: #a78bfa;
+    color: #101827;
+
+    border-radius: 50%;
+
+    font-size: 36px;
+    font-weight: 700;
+}
+
+.profile-header h2 {
+    margin: 0 0 8px;
+    font-size: 28px;
+}
+
+.profile-header p {
+    margin: 0;
+    color: #b8c6dc;
+}
+
+/* Profile statistics */
+
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+
+    margin-top: 20px;
+}
+
+.profile-stat-card {
+    background-color: #3c4a68;
+    padding: 25px;
+
+    border-radius: 12px;
+}
+
+.profile-stat-card span {
+    display: block;
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+}
+
+.profile-stat-card p {
+    margin: 10px 0 0;
+    color: #b8c6dc;
+}
+
+/* Profile navigation */
+
+.profile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+
+    margin-top: 30px;
+}
+
+.profile-actions a {
+    padding: 12px 20px;
+    border-radius: 8px;
+
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.profile-primary-link {
+    background-color: #a78bfa;
+    color: #101827;
+}
+
+.profile-secondary-link {
+    border: 1px solid #a78bfa;
+    color: #a78bfa;
+}
+
+.profile-actions a:hover {
+    opacity: 0.85;
+}
+
+/* Profile link in header */
+
+.nav-user a {
+    color: #a78bfa;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.nav-user a:hover {
+    color: #c4b5fd;
+}
+
+/* Responsive */
+
+@media (max-width: 650px) {
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .profile-stats {
+        grid-template-columns: 1fr;
+    }
+}

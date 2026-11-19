@@ -32,7 +32,12 @@ async function updateAuthNavigation() {
 
         const userItem = document.createElement("li");
         userItem.className = "nav-user";
-        userItem.textContent = data.user.username;
+
+        const profileLink = document.createElement("a");
+        profileLink.href = "profile.html";
+        profileLink.textContent = data.user.username;
+
+        userItem.appendChild(profileLink);
 
         const logoutItem = document.createElement("li");
 

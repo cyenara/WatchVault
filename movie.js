@@ -4,6 +4,119 @@ const movieId = Number(params.get("id"));
 const statusText = document.getElementById("details-status");
 const detailsSection = document.getElementById("movie-details");
 
+
+const WATCHLIST_API = "http://localhost:3001/api/watchlist";
+const AUTH_API = "http://localhost:3001/api/auth";
+
+async function setupWatchlistButton(movie) {
+    const button = document.getElementById("watchlist-button");
+
+    button.disabled = true;
+    button.textContent = "Checking Watchlist...";
+
+    try {
+        const authResponse = await fetch(`${AUTH_API}/me`, {
+            credentials: "include"
+        });
+
+        if (!authResponse.ok) {
+            throw new Error("Failed to check login status");
+        }
+
+        const authData = await authResponse.json();
+
+        // Jei vartotojas neprisijungęs.
+        if (!authData.user) {
+            button.textContent = "Log in to use Watchlist";
+            button.disabled = false;
+
+            button.addEventListener("click", function() {
+                window.location.href = "login.html";
+            });
+
+            return;
+        }
+
+        // Gauname vartotojo išsaugotus filmų ID.
+        const response = await fetch(WATCHLIST_API, {
+            credentials: "include"
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to load watchlist");
+        }
+
+        const data = await response.json();
+
+        let isSaved = data.movieIds.includes(movie.id);
+
+        function updateButton() {
+            button.textContent = isSaved
+                ? "✓ In Watchlist"
+                : "+ Add to Watchlist";
+
+            button.setAttribute(
+                "aria-pressed",
+                String(isSaved)
+            );
+        }
+
+        updateButton();
+        button.disabled = false;
+
+        button.addEventListener("click", async function() {
+            if (button.disabled) {
+                return;
+            }
+
+            button.disabled = true;
+
+            try {
+                const options = {
+                    method: isSaved ? "DELETE" : "POST",
+                    credentials: "include"
+                };
+
+                const url = isSaved
+                    ? `${WATCHLIST_API}/${movie.id}`
+                    : WATCHLIST_API;
+
+                if (!isSaved) {
+                    options.headers = {
+                        "Content-Type": "application/json"
+                    };
+
+                    options.body = JSON.stringify({
+                        movieId: movie.id
+                    });
+                }
+
+                const response = await fetch(url, options);
+
+                if (!response.ok) {
+                    throw new Error("Failed to update watchlist");
+                }
+
+                isSaved = !isSaved;
+                updateButton();
+
+            } catch (error) {
+                console.error(error);
+                alert("Could not update watchlist.");
+
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        button.textContent = "Watchlist unavailable";
+        button.disabled = true;
+    }
+}
+
 async function loadMovieDetails() {
 
     const WATCHLIST_KEY = "watchvault-watchlist";
@@ -35,6 +148,7 @@ async function loadMovieDetails() {
         }
 
         const movie = await response.json();
+        setupWatchlistButton(movie);
 
         const watchlistButton = document.getElementById("watchlist-button");
 

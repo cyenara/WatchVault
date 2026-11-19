@@ -1,66 +1,60 @@
-
-const WATCHLIST_KEY = "watchvault-watchlist";
+const WATCHLIST_API = "http://localhost:3001/api/watchlist";
+const MOVIES_API = "http://localhost:3001/api/movies";
+const AUTH_API = "http://localhost:3001/api/auth";
 
 const watchlistGrid = document.getElementById("watchlist-grid");
 const watchlistCount = document.getElementById("watchlist-count");
 
-function getWatchlist() {
-    try {
-        const saved = localStorage.getItem(WATCHLIST_KEY);
-
-        const data = saved ? JSON.parse(saved) : [];
-
-        return Array.isArray(data) ? data : [];
-
-    } catch (error) {
-        console.error("Failed to read watchlist:", error);
-        return [];
-    }
-}
-
-function removeFromWatchlist(movieId) {
-    const watchlist = getWatchlist();
-
-    const updatedWatchlist = watchlist.filter(function(movie) {
-        return movie.id !== movieId;
-    });
+async function removeFromWatchlist(movieId, button) {
+    button.disabled = true;
 
     try {
-        localStorage.setItem(
-            WATCHLIST_KEY,
-            JSON.stringify(updatedWatchlist)
+        const response = await fetch(
+            `${WATCHLIST_API}/${movieId}`,
+            {
+                method: "DELETE",
+                credentials: "include"
+            }
         );
 
-        renderWatchlist();
+        if (!response.ok) {
+            throw new Error("Failed to remove movie");
+        }
+
+        await loadWatchlist();
 
     } catch (error) {
-        console.error("Failed to update watchlist:", error);
-        alert("Could not remove movie from watchlist.");
+        console.error(error);
+        alert("Could not remove movie.");
+        button.disabled = false;
     }
 }
 
-function renderWatchlist() {
-    const watchlist = getWatchlist();
-
+function renderWatchlist(movieList, totalCount) {
     watchlistGrid.replaceChildren();
 
     watchlistCount.textContent =
-    `${watchlist.length} ${watchlist.length === 1 ? "movie" : "movies"} saved`;
+        `${totalCount} ${totalCount === 1 ? "movie" : "movies"} saved`;
 
-    if (watchlist.length === 0) {
+    if (totalCount === 0) {
         const message = document.createElement("p");
         message.textContent = "Your watchlist is empty.";
 
-        const discoverLink = document.createElement("a");
-        discoverLink.href = "index.html#discover";
-        discoverLink.textContent = "Discover movies";
+        const link = document.createElement("a");
+        link.href = "index.html#discover";
+        link.textContent = "Discover movies";
 
-        watchlistGrid.append(message, discoverLink);
+        watchlistGrid.append(message, link);
         return;
     }
 
-    watchlist.forEach(function(movie) {
+    if (movieList.length === 0) {
+        watchlistGrid.textContent =
+            "Saved movies could not be loaded right now.";
+        return;
+    }
 
+    movieList.forEach(function(movie) {
         const card = document.createElement("article");
         card.className = "movie-card watchlist-card";
 
@@ -70,8 +64,8 @@ function renderWatchlist() {
 
         if (movie.poster_path) {
             const poster = document.createElement("img");
-            poster.className = "movie-poster";
 
+            poster.className = "movie-poster";
             poster.src =
                 `https://image.tmdb.org/t/p/w500${movie.poster_path}`;
 
@@ -83,10 +77,7 @@ function renderWatchlist() {
 
         const title = document.createElement("h3");
         title.textContent = movie.title;
-
         link.appendChild(title);
-
-        const info = document.createElement("p");
 
         const year = movie.release_date
             ? movie.release_date.slice(0, 4)
@@ -96,6 +87,7 @@ function renderWatchlist() {
             ? movie.vote_average.toFixed(1)
             : "N/A";
 
+        const info = document.createElement("p");
         info.textContent = `${year} | ⭐ ${rating}`;
 
         const removeButton = document.createElement("button");
@@ -104,13 +96,98 @@ function renderWatchlist() {
         removeButton.textContent = "Remove";
 
         removeButton.addEventListener("click", function() {
-            removeFromWatchlist(movie.id);
+            removeFromWatchlist(movie.id, removeButton);
         });
 
         card.append(link, info, removeButton);
-
         watchlistGrid.appendChild(card);
     });
 }
 
-renderWatchlist();
+async function loadWatchlist() {
+    watchlistCount.textContent = "Loading watchlist...";
+    watchlistGrid.replaceChildren();
+
+    try {
+        const authResponse = await fetch(`${AUTH_API}/me`, {
+            credentials: "include"
+        });
+
+        if (!authResponse.ok) {
+            throw new Error("Failed to check login status");
+        }
+
+        const authData = await authResponse.json();
+
+        if (!authData.user) {
+            watchlistCount.textContent =
+                "Please log in to view your watchlist.";
+
+            const link = document.createElement("a");
+            link.href = "login.html";
+            link.textContent = "Log In";
+
+            watchlistGrid.appendChild(link);
+            return;
+        }
+
+        const response = await fetch(WATCHLIST_API, {
+            credentials: "include"
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to load watchlist");
+        }
+
+        const data = await response.json();
+        const movieIds = data.movieIds;
+
+        if (movieIds.length === 0) {
+            renderWatchlist([], 0);
+            return;
+        }
+
+        // Gauname kiekvieno išsaugoto filmo informaciją.
+        const results = await Promise.allSettled(
+            movieIds.map(async function(id) {
+                const response = await fetch(
+                    `${MOVIES_API}/${id}`
+                );
+
+                if (!response.ok) {
+                    throw new Error(`Failed to load movie ${id}`);
+                }
+
+                return response.json();
+            })
+        );
+
+        const movies = results
+            .filter(function(result) {
+                return result.status === "fulfilled";
+            })
+            .map(function(result) {
+                return result.value;
+            });
+
+        renderWatchlist(movies, movieIds.length);
+
+        const failedCount = movieIds.length - movies.length;
+
+        if (failedCount > 0) {
+            const warning = document.createElement("p");
+            warning.textContent =
+                `${failedCount} saved movie(s) could not be loaded.`;
+
+            watchlistGrid.prepend(warning);
+        }
+
+    } catch (error) {
+        console.error(error);
+
+        watchlistCount.textContent =
+            "Could not load watchlist. Please try again.";
+    }
+}
+
+loadWatchlist();

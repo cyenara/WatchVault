@@ -1,3 +1,4 @@
+
 const cors = require("cors");
 const express = require("express");
 const db = require("./db");
@@ -10,6 +11,7 @@ const scrypt = promisify(crypto.scrypt);
 const app = express();
 const PORT = 3001;
 
+// Leidžiami frontend adresai
 const FRONTEND_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:3000"
@@ -23,7 +25,8 @@ app.use(cors({
 app.use(express.json({ limit: "10kb" }));
 app.use(cookieParser());
 
-app.use("/api/auth", function(req, res, next) {
+// Užklausų kilmės patikrinimas
+app.use(["/api/auth", "/api/watchlist"], function(req, res, next) {
     const origin = req.get("Origin");
 
     if (
@@ -39,7 +42,7 @@ app.use("/api/auth", function(req, res, next) {
     next();
 });
 
-
+// Sesijų nustatymai
 const SESSION_COOKIE = "wv_session";
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -50,12 +53,14 @@ const SESSION_COOKIE_OPTIONS = {
     path: "/"
 };
 
+// Sesijos tokeno maiša
 function hashSessionToken(token) {
     return crypto.createHash("sha256")
         .update(token)
         .digest("hex");
 }
 
+// Surandame prisijungusį vartotoją
 function getSessionUser(req) {
     const token = req.cookies?.[SESSION_COOKIE];
 
@@ -79,6 +84,23 @@ function getSessionUser(req) {
     return session || null;
 }
 
+// Apsaugome maršrutus nuo neprisijungusių vartotojų
+function requireAuth(req, res, next) {
+    const user = getSessionUser(req);
+
+    if (!user) {
+        return res.status(401).json({
+            message: "You must be logged in"
+        });
+    }
+
+    req.user = user;
+    next();
+}
+
+// ========================================
+// HEALTH IR ABOUT
+// ========================================
 
 app.get("/api/health", function(req, res) {
     res.json({
@@ -88,11 +110,15 @@ app.get("/api/health", function(req, res) {
 
 app.get("/api/about", function(req, res) {
     res.json({
-    project: "WatchVault",
-    version: "1.0",
-    description: "Movie discovery and tracking platform"
+        project: "WatchVault",
+        version: "1.0",
+        description: "Movie discovery and tracking platform"
+    });
 });
-});
+
+// ========================================
+// TMDB – POPULIARŪS FILMAI
+// ========================================
 
 app.get("/api/movies/popular", async function(req, res) {
     try {
@@ -134,6 +160,10 @@ app.get("/api/movies/popular", async function(req, res) {
         });
     }
 });
+
+// ========================================
+// TMDB – FILMO INFORMACIJA
+// ========================================
 
 app.get("/api/movies/:id", async function(req, res) {
     try {
@@ -181,6 +211,9 @@ app.get("/api/movies/:id", async function(req, res) {
     }
 });
 
+// ========================================
+// VARTOTOJO REGISTRACIJA
+// ========================================
 
 app.post("/api/auth/register", async function(req, res) {
     try {
@@ -263,6 +296,9 @@ app.post("/api/auth/register", async function(req, res) {
     }
 });
 
+// ========================================
+// VARTOTOJO PRISIJUNGIMAS
+// ========================================
 
 app.post("/api/auth/login", async function(req, res) {
     try {
@@ -289,7 +325,7 @@ app.post("/api/auth/login", async function(req, res) {
             WHERE email = ?
         `).get(cleanEmail);
 
-        // Naudojame atsargines reikšmes, jeigu vartotojas nerastas.
+        // Atsarginės reikšmės, jei vartotojas nerastas
         const salt = user
             ? user.password_hash.split(":")[0]
             : "0".repeat(32);
@@ -317,23 +353,23 @@ app.post("/api/auth/login", async function(req, res) {
             });
         }
 
-        
+        // Sukuriame naują sesiją
         const sessionToken = crypto.randomBytes(32).toString("hex");
         const tokenHash = hashSessionToken(sessionToken);
         const expiresAt = Date.now() + SESSION_DURATION_MS;
 
-        // Išvalome senas, nebegaliojančias sesijas.
+        // Išvalome pasibaigusias sesijas
         db.prepare(
             "DELETE FROM sessions WHERE expires_at <= ?"
         ).run(Date.now());
 
-        // Išsaugome naują sesiją duomenų bazėje.
+        // Išsaugome sesiją SQLite
         db.prepare(`
             INSERT INTO sessions (token_hash, user_id, expires_at)
             VALUES (?, ?, ?)
         `).run(tokenHash, user.id, expiresAt);
 
-        // Naršyklei išsiunčiame sesijos slapuką.
+        // Naršyklei išsiunčiame slapuką
         res.cookie(SESSION_COOKIE, sessionToken, {
             ...SESSION_COOKIE_OPTIONS,
             maxAge: SESSION_DURATION_MS
@@ -347,7 +383,6 @@ app.post("/api/auth/login", async function(req, res) {
             }
         });
 
-
     } catch (error) {
         console.error("Login error:", error);
 
@@ -357,8 +392,10 @@ app.post("/api/auth/login", async function(req, res) {
     }
 });
 
+// ========================================
+// PRISIJUNGUSIO VARTOTOJO PATIKRINIMAS
+// ========================================
 
-// Patikriname, ar vartotojas prisijungęs.
 app.get("/api/auth/me", function(req, res) {
     res.set("Cache-Control", "no-store");
 
@@ -376,7 +413,10 @@ app.get("/api/auth/me", function(req, res) {
     });
 });
 
-// Atsijungiame.
+// ========================================
+// ATSIJUNGIMAS
+// ========================================
+
 app.post("/api/auth/logout", function(req, res) {
     const token = req.cookies?.[SESSION_COOKIE];
 
@@ -398,6 +438,111 @@ app.post("/api/auth/logout", function(req, res) {
     });
 });
 
+// ========================================
+// WATCHLIST – AUTENTIFIKACIJOS APSAUGA
+// ========================================
+
+app.use("/api/watchlist", requireAuth);
+
+// ========================================
+// WATCHLIST – GAUTI FILMŲ SĄRAŠĄ
+// ========================================
+
+app.get("/api/watchlist", function(req, res) {
+    try {
+        const rows = db.prepare(`
+            SELECT movie_id
+            FROM watchlist
+            WHERE user_id = ?
+            ORDER BY added_at DESC, rowid DESC
+        `).all(req.user.id);
+
+        const movieIds = rows.map(function(row) {
+            return row.movie_id;
+        });
+
+        res.json({ movieIds });
+
+    } catch (error) {
+        console.error("Watchlist error:", error);
+
+        res.status(500).json({
+            message: "Failed to load watchlist"
+        });
+    }
+});
+
+// ========================================
+// WATCHLIST – PRIDĖTI FILMĄ
+// ========================================
+
+app.post("/api/watchlist", function(req, res) {
+    try {
+        const movieId = req.body?.movieId;
+
+        if (!Number.isSafeInteger(movieId) || movieId <= 0) {
+            return res.status(400).json({
+                message: "Invalid movie ID"
+            });
+        }
+
+        const result = db.prepare(`
+            INSERT OR IGNORE INTO watchlist (user_id, movie_id)
+            VALUES (?, ?)
+        `).run(req.user.id, movieId);
+
+        res.status(result.changes > 0 ? 201 : 200).json({
+            message: result.changes > 0
+                ? "Movie added to watchlist"
+                : "Movie already in watchlist"
+        });
+
+    } catch (error) {
+        console.error("Add to watchlist error:", error);
+
+        res.status(500).json({
+            message: "Failed to add movie"
+        });
+    }
+});
+
+// ========================================
+// WATCHLIST – PAŠALINTI FILMĄ
+// ========================================
+
+app.delete("/api/watchlist/:movieId", function(req, res) {
+    try {
+        const movieId = Number(req.params.movieId);
+
+        if (!Number.isSafeInteger(movieId) || movieId <= 0) {
+            return res.status(400).json({
+                message: "Invalid movie ID"
+            });
+        }
+
+        const result = db.prepare(`
+            DELETE FROM watchlist
+            WHERE user_id = ? AND movie_id = ?
+        `).run(req.user.id, movieId);
+
+        res.json({
+            message: result.changes > 0
+                ? "Movie removed from watchlist"
+                : "Movie not in watchlist"
+        });
+
+    } catch (error) {
+        console.error("Remove from watchlist error:", error);
+
+        res.status(500).json({
+            message: "Failed to remove movie"
+        });
+    }
+});
+
+// ========================================
+// SERVERIO PALEIDIMAS
+// ========================================
 
 app.listen(PORT, function() {
     console.log("Server running on port " + PORT);

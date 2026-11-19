@@ -1,0 +1,91 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Profile | WatchVault</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <script src="auth.js" defer></script>
+    <script src="profile.js" defer></script>
+</head>
+<body>
+
+    <header>
+        <h1>WatchVault</h1>
+
+        <nav aria-label="Main navigation">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#discover">Discover</a></li>
+                <li><a href="watchlist.html">Watchlist</a></li>
+
+                <li class="auth-nav-link">
+                    <a href="login.html">Login</a>
+                </li>
+
+                <li class="auth-nav-link">
+                    <a href="register.html">Register</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="profile-page">
+
+        <p id="profile-status" role="status">
+            Loading profile...
+        </p>
+
+        <section id="profile-content" hidden>
+
+            <div class="profile-header">
+
+                <div id="profile-avatar" class="profile-avatar"></div>
+
+                <div>
+                    <h2 id="profile-username"></h2>
+                    <p>WatchVault Member</p>
+                </div>
+
+            </div>
+
+            <h3>Your Statistics</h3>
+
+            <div class="profile-stats">
+
+                <div class="profile-stat-card">
+                    <span id="profile-watchlist-count">0</span>
+                    <p>Watchlist Movies</p>
+                </div>
+
+                <div class="profile-stat-card">
+                    <span>Coming Soon</span>
+                    <p>Movies Watched</p>
+                </div>
+
+            </div>
+
+            <div class="profile-actions">
+                <a href="watchlist.html" class="profile-primary-link">
+                    View My Watchlist
+                </a>
+
+                <a href="index.html#discover" class="profile-secondary-link">
+                    Discover Movies
+                </a>
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2026 WatchVault</p>
+    </footer>
+
+</body>
+</html>
