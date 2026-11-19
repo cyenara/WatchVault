@@ -1,0 +1,80 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Register | WatchVault</title>
+
+    <link rel="stylesheet" href="style.css">
+    <script src="register.js" defer></script>
+    <script src="auth.js" defer></script>
+</head>
+<body>
+
+    <header>
+        <h1>WatchVault</h1>
+
+        <nav aria-label="Main navigation">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#discover">Discover</a></li>
+                <li><a href="watchlist.html">Watchlist</a></li>
+
+                <li class="auth-nav-link">
+                    <a href="login.html">Login</a>
+                </li>
+
+                <li class="auth-nav-link">
+                    <a href="register.html">Register</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="auth-page">
+
+        <form id="register-form" class="auth-form">
+            <h2>Create Account</h2>
+            <p>Join WatchVault and start tracking movies.</p>
+
+            <label for="username">Username</label>
+            <input
+                type="text"
+                id="username"
+                autocomplete="username"
+                minlength="3"
+                maxlength="30"
+                required
+            >
+
+            <label for="email">Email</label>
+            <input
+                type="email"
+                id="email"
+                autocomplete="email"
+                required
+            >
+
+            <label for="password">Password</label>
+            <input
+                type="password"
+                id="password"
+                autocomplete="new-password"
+                minlength="8"
+                maxlength="128"
+                required
+            >
+
+            <button type="submit" id="register-button">
+                Create Account
+            </button>
+
+            <p id="register-message" role="status"></p>
+        </form>
+
+    </main>
+
+</body>
+</html>
