@@ -3,10 +3,14 @@ const API_URL = "http://localhost:3001/api";
 
 const profileStatus = document.getElementById("profile-status");
 const profileContent = document.getElementById("profile-content");
+const averageRating = document.getElementById(
+    "profile-average-rating"
+);
 
 const profileUsername = document.getElementById("profile-username");
 const profileAvatar = document.getElementById("profile-avatar");
 const watchlistCount = document.getElementById("profile-watchlist-count");
+const watchedCount = document.getElementById("profile-watched-count");
 
 async function loadProfile() {
     try {
@@ -64,6 +68,54 @@ async function loadProfile() {
         // 5. Parodome išsaugotų filmų skaičių
         watchlistCount.textContent =
             watchlistData.movieIds.length;
+
+        
+        // Gauname peržiūrėtų filmų skaičių
+        const watchedResponse = await fetch(
+            `${API_URL}/watched`,
+            {
+                credentials: "include",
+                cache: "no-store"
+            }
+        );
+
+        if (!watchedResponse.ok) {
+            throw new Error("Failed to load watched statistics");
+        }
+
+        const watchedData = await watchedResponse.json();
+
+        watchedCount.textContent = watchedData.movieIds.length;
+
+        const ratingsResponse = await fetch(
+            `${API_URL}/ratings`,
+            {
+                credentials: "include",
+                cache: "no-store"
+            }
+        );
+
+        if (!ratingsResponse.ok) {
+            throw new Error("Failed to load rating statistics");
+        }
+
+        const ratingsData = await ratingsResponse.json();
+
+        const ratings = ratingsData.ratings;
+
+        if (ratings.length === 0) {
+            averageRating.textContent = "—";
+        } else {
+            const total = ratings.reduce(function(sum, item) {
+                return sum + item.rating;
+            }, 0);
+
+            const average = total / ratings.length;
+
+            averageRating.textContent = `${average.toFixed(1)}/10`;
+        }
+
+
 
         // 6. Parodome profilį
         profileContent.hidden = false;

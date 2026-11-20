@@ -26,7 +26,9 @@ app.use(express.json({ limit: "10kb" }));
 app.use(cookieParser());
 
 // Užklausų kilmės patikrinimas
-app.use(["/api/auth", "/api/watchlist"], function(req, res, next) {
+app.use(
+    ["/api/auth", "/api/watchlist", "/api/watched", "/api/ratings"],
+    function(req, res, next) {
     const origin = req.get("Origin");
 
     if (
@@ -539,6 +541,221 @@ app.delete("/api/watchlist/:movieId", function(req, res) {
         });
     }
 });
+
+
+// ========================================
+// WATCHED MOVIES
+// ========================================
+
+// Visus Watched maršrutus gali pasiekti tik prisijungę vartotojai.
+app.use("/api/watched", requireAuth);
+
+// Gauti peržiūrėtų filmų ID
+app.get("/api/watched", function(req, res) {
+    try {
+        const rows = db.prepare(`
+            SELECT movie_id
+            FROM watched_movies
+            WHERE user_id = ?
+            ORDER BY watched_at DESC, rowid DESC
+        `).all(req.user.id);
+
+        const movieIds = rows.map(function(row) {
+            return row.movie_id;
+        });
+
+        res.json({ movieIds });
+
+    } catch (error) {
+        console.error("Watched movies error:", error);
+
+        res.status(500).json({
+            message: "Failed to load watched movies"
+        });
+    }
+});
+
+// Pažymėti filmą kaip peržiūrėtą
+app.post("/api/watched", function(req, res) {
+    try {
+        const movieId = req.body?.movieId;
+
+        if (!Number.isSafeInteger(movieId) || movieId <= 0) {
+            return res.status(400).json({
+                message: "Invalid movie ID"
+            });
+        }
+
+        const result = db.prepare(`
+            INSERT OR IGNORE INTO watched_movies (user_id, movie_id)
+            VALUES (?, ?)
+        `).run(req.user.id, movieId);
+
+        res.status(result.changes > 0 ? 201 : 200).json({
+            message: result.changes > 0
+                ? "Movie marked as watched"
+                : "Movie already watched"
+        });
+
+    } catch (error) {
+        console.error("Mark as watched error:", error);
+
+        res.status(500).json({
+            message: "Failed to mark movie as watched"
+        });
+    }
+});
+
+// Pašalinti peržiūrėto filmo žymą
+app.delete("/api/watched/:movieId", function(req, res) {
+    try {
+        const movieId = Number(req.params.movieId);
+
+        if (!Number.isSafeInteger(movieId) || movieId <= 0) {
+            return res.status(400).json({
+                message: "Invalid movie ID"
+            });
+        }
+
+        const result = db.prepare(`
+            DELETE FROM watched_movies
+            WHERE user_id = ? AND movie_id = ?
+        `).run(req.user.id, movieId);
+
+        res.json({
+            message: result.changes > 0
+                ? "Movie removed from watched list"
+                : "Movie was not marked as watched"
+        });
+
+    } catch (error) {
+        console.error("Remove watched movie error:", error);
+
+        res.status(500).json({
+            message: "Failed to remove watched movie"
+        });
+    }
+});
+
+
+// ========================================
+// PERSONAL MOVIE RATINGS
+// ========================================
+
+// Visi vertinimai susieti su prisijungusia paskyra.
+app.use("/api/ratings", requireAuth);
+
+// Gauti visus savo įvertinimus.
+app.get("/api/ratings", function(req, res) {
+    try {
+        const ratings = db.prepare(`
+            SELECT movie_id AS movieId, rating
+            FROM ratings
+            WHERE user_id = ?
+        `).all(req.user.id);
+
+        res.json({ ratings });
+
+    } catch (error) {
+        console.error("Load ratings error:", error);
+
+        res.status(500).json({
+            message: "Failed to load ratings"
+        });
+    }
+});
+
+// Sukurti arba atnaujinti filmo įvertinimą.
+app.put("/api/ratings/:movieId", function(req, res) {
+    try {
+        const movieId = Number(req.params.movieId);
+        const rating = req.body?.rating;
+
+        if (!Number.isSafeInteger(movieId) || movieId <= 0) {
+            return res.status(400).json({
+                message: "Invalid movie ID"
+            });
+        }
+
+        if (
+            !Number.isInteger(rating) ||
+            rating < 1 ||
+            rating > 10
+        ) {
+            return res.status(400).json({
+                message: "Rating must be between 1 and 10"
+            });
+        }
+
+        // Vertinti leidžiame tik peržiūrėtus filmus.
+        const watchedMovie = db.prepare(`
+            SELECT movie_id
+            FROM watched_movies
+            WHERE user_id = ? AND movie_id = ?
+        `).get(req.user.id, movieId);
+
+        if (!watchedMovie) {
+            return res.status(409).json({
+                message: "Mark the movie as watched before rating"
+            });
+        }
+
+        db.prepare(`
+            INSERT INTO ratings (user_id, movie_id, rating)
+            VALUES (?, ?, ?)
+
+            ON CONFLICT(user_id, movie_id)
+            DO UPDATE SET
+                rating = excluded.rating,
+                updated_at = CURRENT_TIMESTAMP
+        `).run(req.user.id, movieId, rating);
+
+        res.json({
+            message: "Rating saved successfully",
+            movieId: movieId,
+            rating: rating
+        });
+
+    } catch (error) {
+        console.error("Save rating error:", error);
+
+        res.status(500).json({
+            message: "Failed to save rating"
+        });
+    }
+});
+
+// Pašalinti savo filmo įvertinimą.
+app.delete("/api/ratings/:movieId", function(req, res) {
+    try {
+        const movieId = Number(req.params.movieId);
+
+        if (!Number.isSafeInteger(movieId) || movieId <= 0) {
+            return res.status(400).json({
+                message: "Invalid movie ID"
+            });
+        }
+
+        const result = db.prepare(`
+            DELETE FROM ratings
+            WHERE user_id = ? AND movie_id = ?
+        `).run(req.user.id, movieId);
+
+        res.json({
+            message: result.changes > 0
+                ? "Rating removed"
+                : "Movie was not rated"
+        });
+
+    } catch (error) {
+        console.error("Remove rating error:", error);
+
+        res.status(500).json({
+            message: "Failed to remove rating"
+        });
+    }
+});
+
 
 // ========================================
 // SERVERIO PALEIDIMAS

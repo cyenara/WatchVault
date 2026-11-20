@@ -19,6 +19,7 @@
                 <li><a href="index.html">Home</a></li>
                 <li><a href="index.html#discover">Discover</a></li>
                 <li><a href="watchlist.html">Watchlist</a></li>
+                <li><a href="watched.html">Watched</a></li>
 
                 <li class="auth-nav-link">
                     <a href="login.html">Login</a>
@@ -53,6 +54,51 @@
                 <button id="watchlist-button" type="button" aria-pressed="false">
                     + Add to Watchlist
                 </button>
+
+                <button id="watched-button" type="button" aria-pressed="false">
+                    ✓ Mark as Watched
+                </button>
+
+
+                <section id="personal-rating-section"
+                        class="personal-rating-section"
+                        aria-labelledby="personal-rating-title">
+
+                    <h3 id="personal-rating-title">Your Rating</h3>
+
+                    <p id="rating-message" role="status">
+                        Loading your rating...
+                    </p>
+
+                    <div id="rating-controls" class="rating-controls" hidden>
+
+                        <label for="personal-rating">Rate this movie</label>
+
+                        <select id="personal-rating">
+                            <option value="">Choose a rating</option>
+                            <option value="10">10 - Masterpiece</option>
+                            <option value="9">9 - Amazing</option>
+                            <option value="8">8 - Great</option>
+                            <option value="7">7 - Good</option>
+                            <option value="6">6 - Above Average</option>
+                            <option value="5">5 - Average</option>
+                            <option value="4">4 - Below Average</option>
+                            <option value="3">3 - Poor</option>
+                            <option value="2">2 - Bad</option>
+                            <option value="1">1 - Terrible</option>
+                        </select>
+
+                        <button id="save-rating" type="button">
+                            Save Rating
+                        </button>
+
+                        <button id="remove-rating" type="button" hidden>
+                            Remove Rating
+                        </button>
+
+                    </div>
+                </section>
+
 
                 <h3>Overview</h3>
                 <p id="details-overview"></p>

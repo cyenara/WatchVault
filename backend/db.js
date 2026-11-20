@@ -51,4 +51,44 @@ db.exec(`
 `);
 
 
+db.exec(`
+    CREATE TABLE IF NOT EXISTS watched_movies (
+        user_id INTEGER NOT NULL,
+        movie_id INTEGER NOT NULL,
+        watched_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+        PRIMARY KEY (user_id, movie_id),
+
+        FOREIGN KEY (user_id)
+            REFERENCES users(id)
+            ON DELETE CASCADE
+    );
+`);
+
+
+db.exec(`
+    PRAGMA foreign_keys = ON;
+
+    CREATE TABLE IF NOT EXISTS ratings (
+        user_id INTEGER NOT NULL,
+        movie_id INTEGER NOT NULL,
+
+        rating INTEGER NOT NULL
+            CHECK (rating BETWEEN 1 AND 10),
+
+        created_at TEXT NOT NULL
+            DEFAULT CURRENT_TIMESTAMP,
+
+        updated_at TEXT NOT NULL
+            DEFAULT CURRENT_TIMESTAMP,
+
+        PRIMARY KEY (user_id, movie_id),
+
+        FOREIGN KEY (user_id, movie_id)
+            REFERENCES watched_movies(user_id, movie_id)
+            ON DELETE CASCADE
+    );
+`);
+
+
 module.exports = db;

@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Watched Movies | WatchVault</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <script src="auth.js" defer></script>
+    <script src="watched.js" defer></script>
+</head>
+<body>
+
+    <header>
+        <h1>WatchVault</h1>
+
+        <nav aria-label="Main navigation">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#discover">Discover</a></li>
+                <li><a href="watchlist.html">Watchlist</a></li>
+                <li><a href="watched.html">Watched</a></li>
+
+                <li class="auth-nav-link">
+                    <a href="login.html">Login</a>
+                </li>
+
+                <li class="auth-nav-link">
+                    <a href="register.html">Register</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="watched-page">
+
+        <h2>My Watched Movies</h2>
+
+        <p>Movies you've already watched.</p>
+
+        <p id="watched-count"></p>
+
+        <p id="watched-status" role="status">
+            Loading watched movies...
+        </p>
+
+        <div class="movie-grid" id="watched-grid"></div>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2026 WatchVault</p>
+    </footer>
+
+</body>
+</html>

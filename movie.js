@@ -7,6 +7,8 @@ const detailsSection = document.getElementById("movie-details");
 
 const WATCHLIST_API = "http://localhost:3001/api/watchlist";
 const AUTH_API = "http://localhost:3001/api/auth";
+const WATCHED_API = "http://localhost:3001/api/watched";
+const RATINGS_API = "http://localhost:3001/api/ratings";
 
 async function setupWatchlistButton(movie) {
     const button = document.getElementById("watchlist-button");
@@ -117,6 +119,325 @@ async function setupWatchlistButton(movie) {
     }
 }
 
+
+async function setupWatchedButton(movie) {
+    const button = document.getElementById("watched-button");
+
+    button.disabled = true;
+    button.textContent = "Checking...";
+
+    try {
+        // Gauname prisijungusio vartotojo peržiūrėtus filmus
+        const response = await fetch(WATCHED_API, {
+            credentials: "include",
+            cache: "no-store"
+        });
+
+        // Jei vartotojas neprisijungęs
+        if (response.status === 401) {
+            button.textContent = "Log in to mark as watched";
+            button.disabled = false;
+
+            button.addEventListener("click", function() {
+                window.location.href = "login.html";
+            });
+
+            return;
+        }
+
+        if (!response.ok) {
+            throw new Error("Failed to load watched movies");
+        }
+
+        const data = await response.json();
+
+        let isWatched = data.movieIds.includes(movie.id);
+
+        function updateButton() {
+            button.textContent = isWatched
+                ? "✓ Watched"
+                : "✓ Mark as Watched";
+
+            button.setAttribute(
+                "aria-pressed",
+                String(isWatched)
+            );
+        }
+
+        updateButton();
+        button.disabled = false;
+
+        // Mygtuko paspaudimas
+        button.addEventListener("click", async function() {
+            if (button.disabled) {
+                return;
+            }
+
+            button.disabled = true;
+
+            try {
+                const options = {
+                    method: isWatched ? "DELETE" : "POST",
+                    credentials: "include"
+                };
+
+                const url = isWatched
+                    ? `${WATCHED_API}/${movie.id}`
+                    : WATCHED_API;
+
+                if (!isWatched) {
+                    options.headers = {
+                        "Content-Type": "application/json"
+                    };
+
+                    options.body = JSON.stringify({
+                        movieId: movie.id
+                    });
+                }
+
+                const result = await fetch(url, options);
+
+                if (result.status === 401) {
+                    window.location.href = "login.html";
+                    return;
+                }
+
+                if (!result.ok) {
+                    throw new Error("Failed to update watched movies");
+                }
+
+                isWatched = !isWatched;
+                updateButton();
+
+                document.dispatchEvent(
+                    new CustomEvent("watchvault:watched-changed", {
+                        detail: {
+                            movieId: movie.id,
+                            isWatched: isWatched
+                        }
+                    })
+                );
+
+            } catch (error) {
+                console.error(error);
+                alert("Could not update watched status.");
+
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        button.textContent = "Watched unavailable";
+        button.disabled = true;
+    }
+}
+
+
+async function setupPersonalRating(movie) {
+    const controls = document.getElementById("rating-controls");
+    const ratingSelect = document.getElementById("personal-rating");
+
+    const saveButton = document.getElementById("save-rating");
+    const removeButton = document.getElementById("remove-rating");
+    const message = document.getElementById("rating-message");
+
+    let isWatched = false;
+    let savedRating = null;
+
+    // Atnaujiname vertinimo laukelio būseną.
+    function updateRatingUI() {
+        controls.hidden = !isWatched;
+
+        if (!isWatched) {
+            message.textContent =
+                "Mark this movie as watched before rating.";
+            return;
+        }
+
+        if (savedRating === null) {
+            message.textContent = "You haven't rated this movie yet.";
+            removeButton.hidden = true;
+        } else {
+            message.textContent = `Your rating: ⭐ ${savedRating}/10`;
+            ratingSelect.value = String(savedRating);
+            removeButton.hidden = false;
+        }
+    }
+
+    // Reaguojame į Watched mygtuko pasikeitimą.
+    document.addEventListener(
+        "watchvault:watched-changed",
+        function(event) {
+            if (event.detail.movieId !== movie.id) {
+                return;
+            }
+
+            isWatched = event.detail.isWatched;
+
+            if (!isWatched) {
+                savedRating = null;
+                ratingSelect.value = "";
+            }
+
+            updateRatingUI();
+        }
+    );
+
+    try {
+        // Gauname peržiūrėtus filmus ir įvertinimus.
+        const [watchedResponse, ratingsResponse] =
+            await Promise.all([
+                fetch(WATCHED_API, {
+                    credentials: "include",
+                    cache: "no-store"
+                }),
+                fetch(RATINGS_API, {
+                    credentials: "include",
+                    cache: "no-store"
+                })
+            ]);
+
+        if (
+            watchedResponse.status === 401 ||
+            ratingsResponse.status === 401
+        ) {
+            message.textContent = "Log in to rate movies.";
+            return;
+        }
+
+        if (!watchedResponse.ok || !ratingsResponse.ok) {
+            throw new Error("Failed to load rating information");
+        }
+
+        const watchedData = await watchedResponse.json();
+        const ratingsData = await ratingsResponse.json();
+
+        isWatched = watchedData.movieIds.includes(movie.id);
+
+        const existingRating = ratingsData.ratings.find(
+            function(item) {
+                return item.movieId === movie.id;
+            }
+        );
+
+        savedRating = existingRating
+            ? existingRating.rating
+            : null;
+
+        updateRatingUI();
+
+    } catch (error) {
+        console.error("Rating error:", error);
+        message.textContent = "Ratings unavailable.";
+        controls.hidden = true;
+        return;
+    }
+
+    // Išsaugome arba pakeičiame įvertinimą.
+    saveButton.addEventListener("click", async function() {
+        if (!isWatched || saveButton.disabled) {
+            return;
+        }
+
+        const rating = Number(ratingSelect.value);
+
+        if (!Number.isInteger(rating) || rating < 1 || rating > 10) {
+            message.textContent = "Please select a rating from 1 to 10.";
+            return;
+        }
+
+        saveButton.disabled = true;
+        removeButton.disabled = true;
+
+        try {
+            const response = await fetch(
+                `${RATINGS_API}/${movie.id}`,
+                {
+                    method: "PUT",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        rating: rating
+                    })
+                }
+            );
+
+            if (response.status === 401) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message || "Failed to save rating");
+            }
+
+            savedRating = rating;
+
+            updateRatingUI();
+            message.textContent = `Rating saved: ⭐ ${rating}/10`;
+
+        } catch (error) {
+            console.error(error);
+            message.textContent = error.message;
+
+        } finally {
+            saveButton.disabled = false;
+            removeButton.disabled = false;
+        }
+    });
+
+    // Pašaliname asmeninį įvertinimą.
+    removeButton.addEventListener("click", async function() {
+        if (savedRating === null || removeButton.disabled) {
+            return;
+        }
+
+        removeButton.disabled = true;
+        saveButton.disabled = true;
+
+        try {
+            const response = await fetch(
+                `${RATINGS_API}/${movie.id}`,
+                {
+                    method: "DELETE",
+                    credentials: "include"
+                }
+            );
+
+            if (response.status === 401) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error("Failed to remove rating");
+            }
+
+            savedRating = null;
+            ratingSelect.value = "";
+
+            updateRatingUI();
+            message.textContent = "Your rating has been removed.";
+
+        } catch (error) {
+            console.error(error);
+            message.textContent = "Could not remove rating.";
+
+        } finally {
+            removeButton.disabled = false;
+            saveButton.disabled = false;
+        }
+    });
+}
+
+
+
 async function loadMovieDetails() {
 
     const WATCHLIST_KEY = "watchvault-watchlist";
@@ -149,6 +470,8 @@ async function loadMovieDetails() {
 
         const movie = await response.json();
         setupWatchlistButton(movie);
+        setupWatchedButton(movie);
+        setupPersonalRating(movie);
 
         const watchlistButton = document.getElementById("watchlist-button");
 
