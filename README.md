@@ -1,12 +1,10 @@
-# WatchVault 🎬
+# WatchVault 
 
 **A full-stack movie discovery and personal tracking web application.**
 
-Discover movies, explore detailed film information, and keep your own watchlist, watched history, and ratings in one place.
+> **Project status: Active development / portfolio project.** Core functionality works locally, but the application is not yet publicly deployed.
 
-> **Project status: Active development / portfolio project.** Core functionality works locally, but the application is not yet publicly deployed or production-ready. This repository is shared to demonstrate the development process and implemented features.
-
-## ✨ Features
+## Features
 
 - **Movie discovery** — browse popular movies from [The Movie Database (TMDB)](https://www.themoviedb.org/) with pagination.
 - **Search, filter & sort** — filter the currently loaded movies by title and genre; sort by release year or title.
@@ -16,7 +14,6 @@ Discover movies, explore detailed film information, and keep your own watchlist,
 - **Watched movies** — track completed movies and browse them on a dedicated page.
 - **Personal ratings** — rate watched movies from 1 to 10, update or remove ratings.
 - **Profile statistics** — watchlist count, watched count, and average personal rating.
-- **Dark movie-inspired interface** — responsive layouts and a cinematic design.
 
 ## 🛠 Tech stack
 
