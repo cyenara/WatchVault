@@ -1,6 +1,6 @@
-const WATCHLIST_API = "http://localhost:3001/api/watchlist";
-const MOVIES_API = "http://localhost:3001/api/movies";
-const AUTH_API = "http://localhost:3001/api/auth";
+const WATCHLIST_API = "/api/watchlist";
+const MOVIES_API = "/api/movies";
+const AUTH_API = "/api/auth";
 
 const watchlistGrid = document.getElementById("watchlist-grid");
 const watchlistCount = document.getElementById("watchlist-count");

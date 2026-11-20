@@ -1,5 +1,5 @@
 
-const AUTH_API = "http://localhost:3001/api/auth";
+const AUTH_API = "/api/auth";
 
 async function updateAuthNavigation() {
     const navList = document.querySelector("header nav ul");

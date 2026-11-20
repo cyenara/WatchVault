@@ -145,7 +145,7 @@ function formatMovies(movieList) {
 
 async function testTMDB() {
     try {
-        const response = await fetch("http://localhost:3001/api/movies/popular");
+        const response = await fetch("/api/movies/popular");
 
         if (!response.ok) {
             throw new Error("Failed to connect to backend");
@@ -186,7 +186,7 @@ loadMoreButton.addEventListener("click", async function() {
         const nextPage = currentPage + 1;
 
         const response = await fetch(
-            `http://localhost:3001/api/movies/popular?page=${nextPage}`
+            `/api/movies/popular?page=${nextPage}`
         );
 
         if (!response.ok) {

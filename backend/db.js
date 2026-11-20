@@ -2,7 +2,8 @@ const { DatabaseSync } = require("node:sqlite");
 const path = require("node:path");
 const fs = require("node:fs");
 
-const dataFolder = path.join(__dirname, "data");
+const dataFolder = process.env.DATA_DIR ||
+    path.join(__dirname, "data");
 
 fs.mkdirSync(dataFolder, { recursive: true });
 

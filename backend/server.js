@@ -5,17 +5,27 @@ const db = require("./db");
 const crypto = require("node:crypto");
 const { promisify } = require("node:util");
 const cookieParser = require("cookie-parser");
+const path = require("node:path");
+const { rateLimit } = require("express-rate-limit");
 
 const scrypt = promisify(crypto.scrypt);
 
 const app = express();
-const PORT = 3001;
+if (process.env.NODE_ENV === "production") {
+    app.set("trust proxy", 1);
+}
+const PORT = Number(process.env.PORT) || 3001;
 
 // Leidžiami frontend adresai
 const FRONTEND_ORIGINS = [
     "http://127.0.0.1:3000",
-    "http://localhost:3000"
-];
+    "http://localhost:3000",
+    "http://localhost:3001",
+    process.env.APP_ORIGIN,
+    process.env.RAILWAY_PUBLIC_DOMAIN
+        ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+        : null
+].filter(Boolean);
 
 app.use(cors({
     origin: FRONTEND_ORIGINS,
@@ -24,6 +34,23 @@ app.use(cors({
 
 app.use(express.json({ limit: "10kb" }));
 app.use(cookieParser());
+
+
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 10,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    message: {
+        message: "Too many attempts. Please try again later."
+    }
+});
+
+app.use(
+    ["/api/auth/login", "/api/auth/register"],
+    authLimiter
+);
+
 
 // Užklausų kilmės patikrinimas
 app.use(
@@ -754,6 +781,43 @@ app.delete("/api/ratings/:movieId", function(req, res) {
             message: "Failed to remove rating"
         });
     }
+});
+
+
+const FRONTEND_FOLDER = path.join(__dirname, "..");
+
+const publicFiles = [
+    "index.html",
+    "movie.html",
+    "watchlist.html",
+    "watched.html",
+    "profile.html",
+    "login.html",
+    "register.html",
+    "style.css",
+    "script.js",
+    "movie.js",
+    "watchlist.js",
+    "watched.js",
+    "profile.js",
+    "auth.js",
+    "login.js",
+    "register.js"
+];
+
+publicFiles.forEach(function(filename) {
+    app.get(`/${filename}`, function(req, res) {
+        res.sendFile(path.join(FRONTEND_FOLDER, filename));
+    });
+});
+
+app.use(
+    "/images",
+    express.static(path.join(FRONTEND_FOLDER, "images"))
+);
+
+app.get("/", function(req, res) {
+    res.sendFile(path.join(FRONTEND_FOLDER, "index.html"));
 });
 
 

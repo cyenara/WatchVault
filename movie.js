@@ -5,10 +5,10 @@ const statusText = document.getElementById("details-status");
 const detailsSection = document.getElementById("movie-details");
 
 
-const WATCHLIST_API = "http://localhost:3001/api/watchlist";
-const AUTH_API = "http://localhost:3001/api/auth";
-const WATCHED_API = "http://localhost:3001/api/watched";
-const RATINGS_API = "http://localhost:3001/api/ratings";
+const WATCHLIST_API = "/api/watchlist";
+const AUTH_API = "/api/auth";
+const WATCHED_API = "/api/watched";
+const RATINGS_API = "/api/ratings";
 
 async function setupWatchlistButton(movie) {
     const button = document.getElementById("watchlist-button");
@@ -461,7 +461,7 @@ async function loadMovieDetails() {
 
     try {
         const response = await fetch(
-            `http://localhost:3001/api/movies/${movieId}`
+            `/api/movies/${movieId}`
         );
 
         if (!response.ok) {
