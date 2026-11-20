@@ -89,60 +89,6 @@ Open **http://localhost:3000/index.html** in your browser.
 
 Register a new local test account to try the watchlist, watched movies, ratings, and profile. The SQLite database is created automatically in `backend/data/watchvault.db`.
 
-## Project structure
-
-```text
-WatchVault/
-├── backend/
-│   ├── server.js           # Express routes, TMDB proxy and authentication
-│   ├── db.js               # SQLite tables and initialization
-│   ├── .env.example        # Environment variable template
-│   └── package.json
-├── images/                 # Local visual assets
-├── index.html              # Movie discovery
-├── movie.html              # Movie details and personal actions
-├── watchlist.html          # Saved-to-watch movies
-├── watched.html            # Watched movies and ratings
-├── profile.html            # User statistics
-├── login.html              # Sign in
-├── register.html           # Create account
-├── *.js                    # Frontend page logic
-└── style.css               # Shared styles
-```
-
-## 🧩 API overview
-
-| API route | Purpose |
-| --- | --- |
-| `GET /api/movies/popular?page=1` | Popular movie listings |
-| `GET /api/movies/:id` | Movie details and credits |
-| `POST /api/auth/register` | Register account |
-| `POST /api/auth/login` | Log in and create session |
-| `GET /api/auth/me` | Check current session |
-| `POST /api/auth/logout` | Log out |
-| `GET /api/watchlist`, `POST /api/watchlist`, `DELETE /api/watchlist/:movieId` | Personal watchlist |
-| `GET /api/watched`, `POST /api/watched`, `DELETE /api/watched/:movieId` | Watched movies |
-| `GET /api/ratings`, `PUT /api/ratings/:movieId`, `DELETE /api/ratings/:movieId` | Personal ratings |
-
-User-specific endpoints use server-side session authentication.
-
-## 🗺 Roadmap
-
-The project is under active development. Planned improvements include:
-
-- [ ] Public demo and deployment configuration
-- [ ] Movie diary / viewing dates
-- [ ] More detailed statistics and profile customization
-- [ ] Better loading, empty-state, and error handling
-- [ ] Automated tests and production security hardening
-- [ ] Mobile and accessibility refinements
-
-## 🔒 Development & security notes
-
-This is a **learning and portfolio project**, not yet a production service. Public deployment will require additional work, including HTTPS hosting, production-ready origin and session settings, rate limiting for authentication, and operational database persistence/backups.
-
-The `.env`, `node_modules/`, and local SQLite data directory are excluded from version control. Each local installation starts with its own empty database.
-
 ## 🎞 Movie data attribution
 
 Movie information and poster/backdrop images are provided by [The Movie Database (TMDB)](https://www.themoviedb.org/).
