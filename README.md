@@ -15,7 +15,7 @@
 - **Personal ratings** — rate watched movies from 1 to 10, update or remove ratings.
 - **Profile statistics** — watchlist count, watched count, and average personal rating.
 
-## 🛠 Tech stack
+## Tech stack
 
 | Layer | Technologies |
 | --- | --- |
@@ -28,13 +28,20 @@
 
 The frontend communicates with the Express API. The backend requests movie metadata from TMDB and stores account-specific data in SQLite. **The TMDB API token is kept server-side** rather than in frontend JavaScript.
 
-## 📷 Screenshots
+## Screenshots
 
-Screenshots of the discovery page, movie details, watched list, and profile will be added to this README.
+### Movie Discovery
+![Movie Discovery](images/dicovery.png)
+
+### Movie Details
+![Movie Details](images/movie-details.png)
+
+### User Profile
+![User Profile](images/profile.png)
 
 **Live demo:** Not deployed yet. Follow the instructions below to run the project locally.
 
-## 🚀 Run locally
+## Run locally
 
 ### Requirements
 
@@ -82,7 +89,7 @@ Open **http://localhost:3000/index.html** in your browser.
 
 Register a new local test account to try the watchlist, watched movies, ratings, and profile. The SQLite database is created automatically in `backend/data/watchvault.db`.
 
-## 📁 Project structure
+## Project structure
 
 ```text
 WatchVault/
