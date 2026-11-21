@@ -51,7 +51,6 @@ WatchVault is deployed on Railway and is available as a live portfolio demonstra
 - [Node.js 24](https://nodejs.org/) or newer (project currently uses Node.js 24 and its built-in SQLite module)
 - npm
 - A free **TMDB API Read Access Token** from [TMDB](https://www.themoviedb.org/settings/api)
-- A local static HTTP server for the frontend (for example, the VS Code **Live Preview** extension)
 
 ### 1. Clone
 
@@ -82,15 +81,21 @@ The API runs at **http://localhost:3001**. To confirm it is running, open **http
 
 On Windows PowerShell, if `npm` is blocked by execution policy, use `npm.cmd install`.
 
-### 4. Start the frontend
 
-Keep the backend running. Open the repository's root folder in VS Code and serve `index.html` using **Live Preview** on port **3000**.
+### 4. Open WatchVault
 
-Open **http://localhost:3000/index.html** in your browser.
+Once the backend server is running, open:
 
-**Important:** Use `localhost:3000`, not `127.0.0.1:3000`, for the current local login/session configuration. The frontend API addresses are currently set to `http://localhost:3001`.
+**http://localhost:3001**
 
-Register a new local test account to try the watchlist, watched movies, ratings, and profile. The SQLite database is created automatically in `backend/data/watchvault.db`.
+The Express server serves both the frontend and backend, so no separate frontend server is required.
+
+The application uses relative API routes (`/api`), allowing it to work both locally and in production.
+
+Register a new local test account to try the watchlist, watched movies, personal ratings, and profile statistics.
+
+The SQLite database is created automatically in `backend/data/watchvault.db`.
+
 
 ## Movie data attribution
 
