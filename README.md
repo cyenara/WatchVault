@@ -39,7 +39,11 @@ The frontend communicates with the Express API. The backend requests movie metad
 ### User Profile
 ![User Profile](images/profile.png)
 
-**Live demo:** Not deployed yet. Follow the instructions below to run the project locally.
+## Live Demo
+
+**[Try WatchVault](https://watchvault-app.up.railway.app)**
+
+WatchVault is deployed on Railway and is available as a live portfolio demonstration.
 
 ## Run locally
 
@@ -89,7 +93,7 @@ Open **http://localhost:3000/index.html** in your browser.
 
 Register a new local test account to try the watchlist, watched movies, ratings, and profile. The SQLite database is created automatically in `backend/data/watchvault.db`.
 
-## 🎞 Movie data attribution
+## Movie data attribution
 
 Movie information and poster/backdrop images are provided by [The Movie Database (TMDB)](https://www.themoviedb.org/).
 
