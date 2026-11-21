@@ -2,8 +2,7 @@
 
 **A full-stack movie discovery and personal tracking web application.**
 
-> **Project status: Active development / portfolio project.** Core functionality works locally, but the application is not yet publicly deployed.
-
+> **Project status: Active development / portfolio project.** WatchVault is deployed on Railway and is available as a live demo. The project is under active development.
 ## Features
 
 - **Movie discovery** — browse popular movies from [The Movie Database (TMDB)](https://www.themoviedb.org/) with pagination.
